@@ -14,6 +14,7 @@ A real-time one-to-one messaging app built with **React**, **Vite** and **Fireba
 - **Unread indicators**: conversations with new messages are highlighted
 - **Shared media panel**: the right sidebar shows every image shared in a chat
 - **Toast notifications** for errors and confirmations
+- **Secure by default**: production Firestore rules keep conversations private to their two participants
 
 ## Tech Stack
 
@@ -29,6 +30,8 @@ A real-time one-to-one messaging app built with **React**, **Vite** and **Fireba
 ## Project Structure
 
 ```
+firestore.rules         # Production Firestore security rules
+firebase.json           # Firebase CLI config (points at firestore.rules)
 src/
 ├── components/
 │   ├── ChatBox/        # Active conversation: messages, input, image upload
@@ -36,7 +39,7 @@ src/
 │   └── RightSidebar/   # Chat partner's profile and shared media
 ├── config/firebase.js  # Firebase init and auth helpers (signup, login, logout, reset)
 ├── context/AppContext.jsx  # Global state: current user, chats, selected chat
-├── lib/upload.js       # Image upload to Firebase Storage
+├── lib/upload.js       # Image upload (Cloudinary, Firebase Storage or inline)
 └── pages/
     ├── Login/          # Sign up / log in / forgot password
     ├── Chat/           # Main chat layout
@@ -46,8 +49,9 @@ src/
 ### Firestore collections
 
 - `users`: profile data (`username`, `name`, `bio`, `avatar`, `lastSeen`)
+- `usernames`: username → `uid` lookup so sign up can check that a username is free
 - `chats`: each user's chat list (`chatsData`, with last message and seen state)
-- `messages`: the message history for each conversation
+- `messages`: the message history for each conversation, plus its two `participants`
 
 ## Getting Started
 
@@ -56,7 +60,7 @@ src/
 - Node.js 18 or later
 - A Firebase project with these turned on:
   - **Authentication** with the **Email/Password** provider
-  - **Cloud Firestore**
+  - **Cloud Firestore** (production mode is fine; see [step 3](#3-publish-the-firestore-security-rules))
 - An image upload provider (see [Image uploads](#image-uploads)). A free Cloudinary account is the default.
 
 ### 1. Clone and install
@@ -98,7 +102,28 @@ Profile pictures and image messages go through a pluggable uploader (`src/lib/up
 | `firebase`   | Firebase Storage turned on | New projects need the Blaze (pay-as-you-go) plan |
 | `inline`     | Nothing extra | Images are resized to 512px and saved in Firestore as data URLs. Good for quick demos, but a conversation's messages share one 1 MB document |
 
-### 3. Run
+### 3. Publish the Firestore security rules
+
+A Firestore database created in **production mode** denies every read and write until you publish rules, and the app shows permission errors until then. The rules in [`firestore.rules`](firestore.rules) allow exactly what the app needs:
+
+- Signed-out visitors can only check whether a username is taken
+- Any signed-in user can read profiles (for search and the chat list), but only the owner can edit theirs. Username and email can't be changed
+- Only the **two participants** in a conversation can read or add messages
+- Everything else, including deletes, is denied
+
+Publish them in one of two ways:
+
+- **Firebase Console:** Firestore Database → **Rules** tab → replace the contents with `firestore.rules` → **Publish**
+- **Firebase CLI:**
+  ```bash
+  npm install -g firebase-tools
+  firebase login
+  firebase deploy --only firestore:rules --project <your-project-id>
+  ```
+
+> If you created the database in **test mode**, publish these rules before the 30-day test window ends. Otherwise Firebase starts denying all access and the app stops working.
+
+### 4. Run
 
 ```bash
 npm run dev       # start the dev server at http://localhost:5173
