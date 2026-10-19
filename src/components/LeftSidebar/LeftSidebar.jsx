@@ -58,6 +58,7 @@ const LeftSidebar = () => {
 
             await setDoc(newMessageRef, {
                 createAt: serverTimestamp(),
+                participants: [userData.id, user.id],
                 messages: []
             })
 

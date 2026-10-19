@@ -1,7 +1,7 @@
 
 import { initializeApp } from "firebase/app";
-import { createUserWithEmailAndPassword, getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, signOut} from 'firebase/auth'
-import { collection, doc, getDocs, getFirestore, query, setDoc, where } from 'firebase/firestore'
+import { createUserWithEmailAndPassword, deleteUser, getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, signOut} from 'firebase/auth'
+import { doc, getDoc, getFirestore, writeBatch } from 'firebase/firestore'
 import { toast } from "react-toastify";
 
 // --------- Firebase config is read from the .env file ---------
@@ -21,31 +21,43 @@ const db = getFirestore(app)
 
 const signup = async (username, email, password) => {
     try {
-        const usersRef = collection(db,'users')
-        const q = query(usersRef,where("username", "==" ,username.toLowerCase()))
-        const querySnapshot = await getDocs(q)
-        if(querySnapshot.docs.length>0){
+        // usernames/{username} -> { uid } keeps usernames unique without exposing the users collection
+        username = username.toLowerCase()
+        const usernameRef = doc(db,'usernames',username)
+        const usernameSnap = await getDoc(usernameRef)
+        if(usernameSnap.exists()){
             toast.error("Username already taken")
             return 0;
         }
         const res = await createUserWithEmailAndPassword(auth, email, password)
         const user = res.user
-        await setDoc(doc(db,"users",user.uid), {
+        const batch = writeBatch(db)
+        batch.set(doc(db,"users",user.uid), {
             id: user.uid,
-            username:username.toLowerCase(),
+            username,
             email,
             name:"",
             avatar:"",
             bio:"Hey there, I am using Whisperly",
             lastSeen: Date.now()
         });
-        await setDoc(doc(db,"chats",user.uid), {
+        batch.set(doc(db,"chats",user.uid), {
             chatsData:[]
         });
+        batch.set(usernameRef, {
+            uid: user.uid
+        });
+        try {
+            await batch.commit()
+        } catch (error) {
+            // Username was claimed between the check and now: undo the auth account
+            await deleteUser(user)
+            throw error
+        }
 
     } catch (error) {
         console.error(error)
-        toast.error(error.code.split('/')[1].split('-').join(" "))
+        toast.error((error.code || error.message).split('/').pop().split('-').join(" "))
     }
 }
 
@@ -54,7 +66,7 @@ const login = async (email, password) => {
         await signInWithEmailAndPassword(auth, email, password)
     } catch (error) {
         console.error(error)
-        toast.error(error.code.split('/')[1].split('-').join(" "))
+        toast.error((error.code || error.message).split('/').pop().split('-').join(" "))
     }
 }
 
@@ -68,16 +80,9 @@ const resetPass = async (email) => {
         return null
     }
     try {
-        const userRef = collection(db, "users")
-        const q = query(userRef, where("email", "==", email))
-        const querySnap = await getDocs(q)
-        if (!querySnap.empty) {
-            await sendPasswordResetEmail(auth,email)
-            toast.success("Reset Email Sent")
-        }
-        else {
-            toast.error("Email doesn't exists")
-        }
+        // Firebase does not reveal whether the email is registered (email enumeration protection)
+        await sendPasswordResetEmail(auth,email)
+        toast.success("If an account exists for this email, a reset link has been sent")
     } catch (error) {
         console.error(error)
         toast.error(error.message)
