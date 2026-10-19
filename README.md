@@ -1,19 +1,38 @@
-# Whisperly
+# Whisperly 2.0
 
-A real-time one-to-one messaging app built with **React**, **Vite** and **Firebase**. Sign up, set up a profile, find people by username and chat instantly, with text and image messages, online status and unread indicators.
+A real-time one-to-one messenger built with **React**, **Vite** and **Firebase**. Sign up, set up a profile, find people by username and chat instantly, with photos, presence, unread tracking and a polished dark/light interface.
+
+![Whisperly conversation view, dark theme](docs/screenshots/chat-dark.png)
+
+<p align="center">
+  <img src="docs/screenshots/chat-light.png" width="62%" alt="Light theme" />
+  &nbsp;
+  <img src="docs/screenshots/mobile.png" width="23%" alt="Mobile layout" />
+</p>
+
+## What's new in 2.0
+
+- **Complete redesign**: glass panels on an aurora background, Geist typography, gradient accents and a design-token system (`src/index.css`)
+- **Dark and light themes** that follow your system, with a one-click toggle (remembered per browser)
+- **Smarter chat list**: live prefix search by username, All/Unread filters, unread count, relative timestamps and presence dots
+- **Better conversations**: bubbles grouped by sender and time, day separators, image lightbox, auto-growing composer (Enter to send, Shift+Enter for a new line) and upload progress
+- **Details panel**: profile, presence, bio, conversation stats and a shared-media grid. It turns into a slide-over drawer on smaller screens
+- **Profile page** with a live preview card and drag-and-drop photo upload
+- **Responsive** from phones to wide desktops
+- **Demo data**: `npm run seed` fills the app with a demo account and realistic conversations, and the login page gets an *Explore with a demo account* button
+- **Fixes**: presence now keeps updating after login, background timers are cleaned up, and new accounts no longer error on first load
 
 ## Features
 
 - **Authentication**: sign up, log in, log out and password reset by email (Firebase Auth)
 - **Unique usernames**: you can't sign up with a username that's already taken
 - **Profile setup**: name, bio and profile picture
-- **User search**: find other users by username and start a conversation
+- **User search**: find people by username prefix and start a conversation
 - **Real-time messaging**: messages show up immediately through Firestore `onSnapshot` listeners
 - **Image messages**: send photos through a configurable upload provider (Cloudinary, Firebase Storage or inline)
-- **Online status**: a green dot appears from each user's last-seen time
-- **Unread indicators**: conversations with new messages are highlighted
-- **Shared media panel**: the right sidebar shows every image shared in a chat
-- **Toast notifications** for errors and confirmations
+- **Presence**: "Active now" / "Active 5m ago" from each user's last-seen time
+- **Unread tracking**: unread badge, highlight and filter
+- **Shared media** grid with a full-screen viewer
 - **Secure by default**: production Firestore rules keep conversations private to their two participants
 
 ## Tech Stack
@@ -22,9 +41,9 @@ A real-time one-to-one messaging app built with **React**, **Vite** and **Fireba
 |------------|----------------------------------------------|
 | Frontend   | React 18, React Router 6                     |
 | Build tool | Vite 5                                       |
-| Backend    | Firebase Authentication, Cloud Firestore |
+| Backend    | Firebase Authentication, Cloud Firestore     |
 | Media      | Cloudinary, Firebase Storage or inline (configurable) |
-| UI         | Plain CSS, React Toastify                    |
+| UI         | Plain CSS with design tokens, lucide-react icons, React Toastify |
 | Deployment | Vercel (SPA rewrites in `vercel.json`)       |
 
 ## Project Structure
@@ -32,18 +51,25 @@ A real-time one-to-one messaging app built with **React**, **Vite** and **Fireba
 ```
 firestore.rules         # Production Firestore security rules
 firebase.json           # Firebase CLI config (points at firestore.rules)
+scripts/seed.mjs        # Demo data seeder (npm run seed)
+docs/screenshots/       # README images
 src/
+├── index.css           # Design tokens, themes and shared UI primitives
 ├── components/
-│   ├── ChatBox/        # Active conversation: messages, input, image upload
-│   ├── LeftSidebar/    # Chat list, user search, menu
-│   └── RightSidebar/   # Chat partner's profile and shared media
+│   ├── ChatBox/        # Conversation: message groups, composer, photo upload
+│   ├── LeftSidebar/    # Chat list, search, filters, account menu
+│   ├── RightSidebar/   # Details panel: profile, stats, shared media
+│   └── ui/             # Avatar, Logo, Lightbox
 ├── config/firebase.js  # Firebase init and auth helpers (signup, login, logout, reset)
-├── context/AppContext.jsx  # Global state: current user, chats, selected chat
-├── lib/upload.js       # Image upload (Cloudinary, Firebase Storage or inline)
+├── context/AppContext.jsx  # Global state: current user, chats, selected chat, presence
+├── lib/
+│   ├── upload.js       # Image upload (Cloudinary, Firebase Storage or inline)
+│   ├── format.js       # Time, day and last-seen formatting
+│   └── theme.js        # Light/dark theme preference
 └── pages/
-    ├── Login/          # Sign up / log in / forgot password
-    ├── Chat/           # Main chat layout
-    └── ProfileUpdate/  # Edit profile
+    ├── Login/          # Landing + sign up / log in / forgot password
+    ├── Chat/           # App shell
+    └── ProfileUpdate/  # Profile setup and editing
 ```
 
 ### Firestore collections
@@ -131,6 +157,25 @@ npm run build     # make a production build in dist/
 npm run preview   # preview the production build
 npm run lint      # run ESLint
 ```
+
+## Demo data
+
+Fill a fresh project with a demo account, eight contacts and seven realistic conversations (photos, unread threads, messages spread over the last ten days):
+
+1. Add these to `.env` (see `.env.example`):
+   ```env
+   VITE_DEMO_EMAIL=demo@whisperly-demo.dev
+   VITE_DEMO_PASSWORD=<choose a password>
+   SEED_PASSWORD=<password for the seeded contact accounts>
+   ```
+2. Run the seeder (it uses the normal client SDK, so publish `firestore.rules` first):
+   ```bash
+   npm run seed
+   npm run seed -- --with <your-username>   # also add conversations to your own account
+   ```
+3. On the login page, click **Explore with a demo account**.
+
+The seeder is safe to re-run: existing accounts are reused and existing conversations are skipped. Seeded accounts use `@whisperly-demo.dev` emails, so they're easy to find and delete in the Firebase console. If you deploy with `VITE_DEMO_*` set, the demo login is public, which is usually what you want for a portfolio demo.
 
 ## Deployment
 
