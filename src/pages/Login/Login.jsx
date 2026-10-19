@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import './Login.css'
 import { AtSign, Eye, EyeOff, Lock, Mail, ShieldCheck, Sparkles, Zap, ImageIcon, ArrowRight } from 'lucide-react';
 import { signup, login, resetPass } from '../../config/firebase';

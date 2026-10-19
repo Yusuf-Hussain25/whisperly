@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import './LeftSidebar.css'
 import { Search, X, MoreHorizontal, UserRound, LogOut, Sun, Moon, MessageSquarePlus, ImageIcon, Check } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
@@ -147,6 +147,7 @@ const LeftSidebar = () => {
             }
         }
         updateChatUserData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [chatData])
 
     const onToggleTheme = () => setTheme(toggleTheme());

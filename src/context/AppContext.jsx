@@ -96,6 +96,7 @@ const AppContextProvider = (props) => {
                 clearInterval(timer);
             }
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userData?.id])
 
     const value = {

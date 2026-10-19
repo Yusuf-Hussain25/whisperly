@@ -1,4 +1,4 @@
-import React, { useId } from 'react'
+import { useId } from 'react'
 
 // Whisperly mark: a speech bubble with a soft sound wave inside.
 export const LogoMark = ({ size = 32 }) => {

@@ -1,4 +1,4 @@
-import React, { Fragment, useContext, useEffect, useRef, useState } from 'react'
+import { Fragment, useContext, useEffect, useRef, useState } from 'react'
 import './ChatBox.css'
 import { ArrowLeft, ImagePlus, PanelRight, SendHorizontal, Lock } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
@@ -137,6 +137,7 @@ const ChatBox = () => {
       };
     }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messagesId]);
 
   if (!chatUser) {

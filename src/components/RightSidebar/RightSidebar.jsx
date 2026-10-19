@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from 'react'
+import { useContext, useMemo, useState } from 'react'
 import './RightSidebar.css'
 import { X, ImageIcon, MessageCircle, CalendarDays } from 'lucide-react'
 import { AppContext } from '../../context/AppContext'

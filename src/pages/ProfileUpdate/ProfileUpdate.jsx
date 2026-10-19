@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react'
+import { useContext, useEffect, useMemo, useState } from 'react'
 import './ProfileUpdate.css'
 import { ArrowLeft, Camera, Check, ImagePlus } from 'lucide-react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -27,6 +27,7 @@ const ProfileUpdate = () => {
   const { setUserData } = useContext(AppContext);
 
   const preview = useMemo(() => (image ? URL.createObjectURL(image) : prevImage), [image, prevImage]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => () => image && URL.revokeObjectURL(preview), [preview]);
 
   const isComplete = !!prevImage;
@@ -96,6 +97,7 @@ const ProfileUpdate = () => {
         navigate("/")
       }
     })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
