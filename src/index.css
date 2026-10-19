@@ -449,10 +449,3 @@ textarea.input {
     transition-duration: .01ms !important;
   }
 }
-
-/* Legacy helper used by v1 layouts until each screen is migrated */
-@media (max-width:900px) {
-  .hidden {
-    display: none;
-  }
-}

@@ -8,20 +8,21 @@ import { Route, Routes, useNavigate } from 'react-router-dom';
 import Chat from './pages/Chat/Chat';
 import ProfileUpdate from './pages/ProfileUpdate/ProfileUpdate';
 import { AppContext } from './context/AppContext';
+import { applyTheme } from './lib/theme';
 
 const App = () => {
 
   const navigate = useNavigate();
-  const {loadUserData,setChatUser,setMessagesId} = useContext(AppContext);
+  const {loadUserData,resetSession} = useContext(AppContext);
 
   useEffect(() => {
-    onAuthStateChanged(auth, async (user) => {
+    applyTheme();
+    return onAuthStateChanged(auth, async (user) => {
       if (user) {
         loadUserData(user.uid);
       }
       else{
-        setChatUser(null)
-        setMessagesId(null)
+        resetSession()
         navigate('/')
       }
     })
@@ -29,7 +30,7 @@ const App = () => {
 
   return (
     <>
-      <ToastContainer />
+      <ToastContainer position="top-center" autoClose={3500} hideProgressBar newestOnTop closeButton={false} />
       <Routes>
         <Route path='/chat' element={<Chat />} />
         <Route path='/' element={<Login />} />
