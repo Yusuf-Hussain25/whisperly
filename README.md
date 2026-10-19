@@ -9,7 +9,7 @@ A real-time one-to-one messaging app built with **React**, **Vite** and **Fireba
 - **Profile setup**: name, bio and profile picture
 - **User search**: find other users by username and start a conversation
 - **Real-time messaging**: messages show up immediately through Firestore `onSnapshot` listeners
-- **Image messages**: send photos, stored in Firebase Storage
+- **Image messages**: send photos through a configurable upload provider (Cloudinary, Firebase Storage or inline)
 - **Online status**: a green dot appears from each user's last-seen time
 - **Unread indicators**: conversations with new messages are highlighted
 - **Shared media panel**: the right sidebar shows every image shared in a chat
@@ -21,7 +21,8 @@ A real-time one-to-one messaging app built with **React**, **Vite** and **Fireba
 |------------|----------------------------------------------|
 | Frontend   | React 18, React Router 6                     |
 | Build tool | Vite 5                                       |
-| Backend    | Firebase Authentication, Cloud Firestore, Firebase Storage |
+| Backend    | Firebase Authentication, Cloud Firestore |
+| Media      | Cloudinary, Firebase Storage or inline (configurable) |
 | UI         | Plain CSS, React Toastify                    |
 | Deployment | Vercel (SPA rewrites in `vercel.json`)       |
 
@@ -56,7 +57,7 @@ src/
 - A Firebase project with these turned on:
   - **Authentication** with the **Email/Password** provider
   - **Cloud Firestore**
-  - **Storage**
+- An image upload provider (see [Image uploads](#image-uploads)). A free Cloudinary account is the default.
 
 ### 1. Clone and install
 
@@ -81,7 +82,21 @@ VITE_FIREBASE_PROJECT_ID=
 VITE_FIREBASE_STORAGE_BUCKET=
 VITE_FIREBASE_MESSAGING_SENDER_ID=
 VITE_FIREBASE_APP_ID=
+
+VITE_UPLOAD_PROVIDER=cloudinary
+VITE_CLOUDINARY_CLOUD_NAME=
+VITE_CLOUDINARY_UPLOAD_PRESET=
 ```
+
+### Image uploads
+
+Profile pictures and image messages go through a pluggable uploader (`src/lib/upload.js`). Choose a provider with `VITE_UPLOAD_PROVIDER`:
+
+| Provider     | What you need | Notes |
+|--------------|---------------|-------|
+| `cloudinary` (default) | Free [Cloudinary](https://cloudinary.com) account: your **cloud name** plus an **unsigned upload preset** (Settings → Upload → Upload presets) | No credit card, 25 GB free |
+| `firebase`   | Firebase Storage turned on | New projects need the Blaze (pay-as-you-go) plan |
+| `inline`     | Nothing extra | Images are resized to 512px and saved in Firestore as data URLs. Good for quick demos, but a conversation's messages share one 1 MB document |
 
 ### 3. Run
 
@@ -94,7 +109,7 @@ npm run lint      # run ESLint
 
 ## Deployment
 
-The project is set up for **Vercel**. Import the repository, add the six `VITE_FIREBASE_*` variables under **Project Settings → Environment Variables** and deploy. `vercel.json` rewrites every route to `index.html`, so client-side routing works.
+The project is set up for **Vercel**. Import the repository, add the variables from `.env.example` under **Project Settings → Environment Variables** and deploy. `vercel.json` rewrites every route to `index.html`, so client-side routing works.
 
 ## Author
 

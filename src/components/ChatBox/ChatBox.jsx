@@ -71,7 +71,13 @@ const ChatBox = () => {
 
   const sendImage = async (e) => {
 
-    const fileUrl = await upload(e.target.files[0])
+    let fileUrl;
+    try {
+      fileUrl = await upload(e.target.files[0])
+    } catch (error) {
+      toast.error(error.message)
+      return;
+    }
 
     if (fileUrl && messagesId) {
       await updateDoc(doc(db, "messages", messagesId), {
