@@ -48,7 +48,7 @@ const Login = () => {
       <section className='auth-hero'>
         <Logo size={36} />
         <div className='auth-hero-copy'>
-          <span className='auth-badge'><Sparkles size={14} /> Whisperly 2.0</span>
+          <span className='auth-badge'><Sparkles size={14} /> Private, real-time chat</span>
           <h1>Conversations that feel <span className='gradient-text'>close</span>, wherever you are.</h1>
           <p>A fast, private messenger for the people who matter. Pick up any conversation right where you left it.</p>
         </div>
