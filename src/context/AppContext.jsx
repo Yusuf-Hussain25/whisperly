@@ -1,4 +1,4 @@
-import { doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
+import { collection, doc, documentId, getDoc, getDocs, onSnapshot, query, updateDoc, where } from "firebase/firestore";
 import { createContext, useEffect, useRef, useState } from "react";
 import { auth, db } from "../config/firebase";
 import { toast } from "react-toastify";
@@ -8,13 +8,24 @@ export const AppContext = createContext()
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Adds each chat partner's profile to the chat list entries, newest first.
+// Firestore "in" queries take at most 30 values
+const IN_LIMIT = 30;
+
+// Adds each chat partner's profile to the chat list entries, newest first. Profiles come
+// from one query per 30 partners instead of one read per chat.
 const withPartners = async (chatItems = []) => {
-    const items = await Promise.all(chatItems.map(async (item) => {
-        const userSnap = await getDoc(doc(db, "users", item.rId));
-        return { ...item, userData: userSnap.data() };
-    }));
-    return items.filter((item) => item.userData).sort((a, b) => b.updatedAt - a.updatedAt);
+    const ids = [...new Set(chatItems.map((item) => item.rId))];
+    const chunks = [];
+    for (let i = 0; i < ids.length; i += IN_LIMIT) chunks.push(ids.slice(i, i + IN_LIMIT));
+    const snaps = await Promise.all(chunks.map((chunk) =>
+        getDocs(query(collection(db, "users"), where(documentId(), "in", chunk)))
+    ));
+    const profiles = {};
+    snaps.forEach((snap) => snap.forEach((d) => { profiles[d.id] = d.data(); }));
+    return chatItems
+        .map((item) => ({ ...item, userData: profiles[item.rId] }))
+        .filter((item) => item.userData)
+        .sort((a, b) => b.updatedAt - a.updatedAt);
 };
 
 const AppContextProvider = (props) => {
@@ -33,6 +44,14 @@ const AppContextProvider = (props) => {
     const loadUserData = async (uid) => {
         try {
             const userRef = doc(db, 'users', uid);
+            // Load the chat list alongside the profile instead of after it, so the chat screen
+            // has its data one round trip sooner. The realtime listener takes over once it reports.
+            getDoc(doc(db, 'chats', uid))
+                .then((snap) => withPartners(snap.data()?.chatsData))
+                .then((chats) => {
+                    if (auth.currentUser?.uid === uid) setChatData((current) => current ?? chats);
+                })
+                .catch(() => {});
             // Right after sign up the profile is written just after the auth account exists
             let userSnap = await getDoc(userRef);
             for (let i = 0; i < 10 && !userSnap.exists(); i++) {
