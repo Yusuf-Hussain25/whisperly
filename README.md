@@ -2,6 +2,8 @@
 
 A real-time one-to-one messenger built with **React**, **Vite** and **Firebase**. Sign up, set up a profile, find people by username and chat instantly, with photos, presence, unread tracking and a polished dark/light interface.
 
+**Live demo: [whisperly.yusufhussain.in](https://whisperly.yusufhussain.in)**. Use **Explore with a demo account** on the login page.
+
 ![Whisperly conversation view, dark theme](docs/screenshots/chat-dark.png)
 
 <p align="center">
@@ -179,7 +181,12 @@ The seeder is safe to re-run: existing accounts are reused and existing conversa
 
 ## Deployment
 
-The project is set up for **Vercel**. Import the repository, add the variables from `.env.example` under **Project Settings → Environment Variables** and deploy. `vercel.json` rewrites every route to `index.html`, so client-side routing works.
+The live demo runs on **Vercel** (free Hobby plan) with the repo connected, so every push to `main` deploys automatically. Firebase Auth and Firestore are always on, so there is no server or database that sleeps.
+
+1. Import the repository in Vercel (framework preset **Vite**).
+2. Add the `VITE_` variables from `.env.example` under **Project Settings → Environment Variables** and deploy. `vercel.json` rewrites every route to `index.html`, so client-side routing works.
+3. Custom subdomain: `vercel domains add <sub>.<your-domain> <project>`, then add an **A** record `<sub>` → `76.76.21.21` at your DNS provider. Vercel issues the HTTPS certificate.
+4. In Firebase Console → Authentication → Settings → **Authorized domains**, add the new domain.
 
 ## Author
 
