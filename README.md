@@ -54,6 +54,9 @@ A real-time one-to-one messenger built with **React**, **Vite** and **Firebase**
 firestore.rules         # Production Firestore security rules
 firebase.json           # Firebase CLI config (points at firestore.rules)
 scripts/seed.mjs        # Demo data seeder (npm run seed)
+scripts/demo-reset.mjs  # Save / restore the demo baseline (npm run demo:baseline, demo:reset)
+api/cron/demo-reset.js  # Daily Vercel cron that restores the demo account
+api/_lib/               # Demo reset logic and the saved baseline
 docs/screenshots/       # README images
 src/
 ├── index.css           # Design tokens, themes and shared UI primitives
@@ -137,6 +140,7 @@ A Firestore database created in **production mode** denies every read and write 
 - Signed-out visitors can only check whether a username is taken
 - Any signed-in user can read profiles (for search and the chat list), but only the owner can edit theirs. Username and email can't be changed
 - Only the **two participants** in a conversation can read or add messages
+- The shared demo account (`demo@whisperly-demo.dev`, hard-coded in `isDemo()`) can only update its presence and message its existing contacts: no profile edits and no new conversations
 - Everything else, including deletes, is denied
 
 Publish them in one of two ways:
@@ -179,14 +183,27 @@ Fill a fresh project with a demo account, eight contacts and seven realistic con
 
 The seeder is safe to re-run: existing accounts are reused and existing conversations are skipped. Seeded accounts use `@whisperly-demo.dev` emails, so they're easy to find and delete in the Firebase console. If you deploy with `VITE_DEMO_*` set, the demo login is public, which is usually what you want for a portfolio demo.
 
+### Keeping the shared demo tidy
+
+Every visitor uses the same demo login, so:
+
+- **Locked profile:** the security rules stop the demo account from editing its name, photo or bio and from starting new chats. The app explains this with a toast instead of showing a permission error.
+- **Daily reset:** visitors can still send messages to the demo contacts. A Vercel cron (`vercel.json`, 06:00 IST) calls `/api/cron/demo-reset`, which restores the seeded conversations, chat list and unread badge from `api/_lib/demo-baseline.js` and moves every timestamp up to the present, so the chats always look recent.
+
+```bash
+npm run demo:baseline   # after seeding: save the current demo chats as the state to restore
+npm run demo:reset      # restore it now, without waiting for the cron
+```
+
 ## Deployment
 
 The live demo runs on **Vercel** (free Hobby plan) with the repo connected, so every push to `main` deploys automatically. Firebase Auth and Firestore are always on, so there is no server or database that sleeps.
 
 1. Import the repository in Vercel (framework preset **Vite**).
-2. Add the `VITE_` variables from `.env.example` under **Project Settings → Environment Variables** and deploy. `vercel.json` rewrites every route to `index.html`, so client-side routing works.
+2. Add the `VITE_` variables and `CRON_SECRET` from `.env.example` under **Project Settings → Environment Variables** and deploy. `vercel.json` rewrites every route except `/api/` to `index.html`, so client-side routing works, and schedules the daily demo reset.
 3. Custom subdomain: `vercel domains add <sub>.<your-domain> <project>`, then add an **A** record `<sub>` → `76.76.21.21` at your DNS provider. Vercel issues the HTTPS certificate.
-4. In Firebase Console → Authentication → Settings → **Authorized domains**, add the new domain.
+
+Email and password sign-in works on any domain. Add the domain under Firebase Console → Authentication → Settings → **Authorized domains** only if you add Google or another OAuth sign-in.
 
 ## Author
 
