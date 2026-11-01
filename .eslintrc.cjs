@@ -12,7 +12,7 @@ module.exports = {
   settings: { react: { version: '18.2' } },
   plugins: ['react-refresh'],
   overrides: [
-    { files: ['scripts/**'], env: { node: true, browser: false } },
+    { files: ['scripts/**', 'api/**'], env: { node: true, browser: false } },
   ],
   rules: {
     'react/jsx-no-target-blank': 'off',
