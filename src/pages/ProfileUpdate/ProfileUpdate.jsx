@@ -6,6 +6,7 @@ import { auth, db } from '../../config/firebase';
 import { useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import upload from '../../lib/upload';
+import { DEMO_PROFILE_LOCKED, isDemoAccount } from '../../lib/demo';
 import { toast } from 'react-toastify';
 import { AppContext } from '../../context/AppContext';
 import Avatar from '../../components/ui/Avatar';
@@ -43,6 +44,10 @@ const ProfileUpdate = () => {
 
   const profileUpdate = async (event) => {
     event.preventDefault();
+    if (isDemoAccount()) {
+      toast.info(DEMO_PROFILE_LOCKED);
+      return 0;
+    }
     if (!prevImage && !image) {
       toast.error("Add a profile picture to continue")
       return 0;

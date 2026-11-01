@@ -10,6 +10,7 @@ import Logo from '../ui/Logo';
 import Avatar from '../ui/Avatar';
 import { formatListTime, isOnline } from '../../lib/format';
 import { resolveTheme, toggleTheme } from '../../lib/theme';
+import { DEMO_NEW_CHAT_LOCKED, isDemoAccount } from '../../lib/demo';
 
 const LeftSidebar = () => {
 
@@ -73,6 +74,10 @@ const LeftSidebar = () => {
             if (existingChat[user.id]) {
                 setSearch("");
                 return setChat(existingChat[user.id]);
+            }
+            if (isDemoAccount()) {
+                toast.info(DEMO_NEW_CHAT_LOCKED);
+                return 0;
             }
             const newMessageRef = doc(messagesRef);
 

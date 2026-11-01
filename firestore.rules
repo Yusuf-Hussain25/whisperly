@@ -14,6 +14,12 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
+    // The shared demo login (VITE_DEMO_EMAIL). Every visitor uses it, so it may only
+    // update its presence and message its existing contacts. Keep in sync with .env.
+    function isDemo() {
+      return signedIn() && request.auth.token.email == 'demo@whisperly-demo.dev';
+    }
+
     function onlyChanges(fields) {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
     }
@@ -32,7 +38,8 @@ service cloud.firestore {
       allow read: if signedIn();
       allow create: if isUser(uid) && request.resource.data.id == uid;
       allow update: if isUser(uid)
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['id', 'username', 'email']);
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['id', 'username', 'email'])
+        && (!isDemo() || onlyChanges(['lastSeen']));
     }
 
     // chats/{uid}.chatsData is a user's chat list. The other person in a chat
@@ -47,7 +54,7 @@ service cloud.firestore {
     // Conversation history: only the two participants can read or append.
     match /messages/{messageId} {
       allow read: if signedIn() && request.auth.uid in resource.data.participants;
-      allow create: if signedIn()
+      allow create: if signedIn() && !isDemo()
         && request.resource.data.participants.size() == 2
         && request.auth.uid in request.resource.data.participants;
       allow update: if signedIn()
